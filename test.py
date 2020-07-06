@@ -37,15 +37,26 @@ def Object_Connected_Component(masks,filepath):
     return masks_new
 
 def main():
-    ROOT_DIR='/home/sun/facades_datasets/3.etrims/'
-    MASK_NAME='basel_000051_mv0'
-    MASK_PATH=os.path.join(ROOT_DIR,'annotations','%s.png' % MASK_NAME)
-
+    # ROOT_DIR='/home/sun/facades_datasets/3.etrims/'
+    # MASK_NAME='basel_000051_mv0'
+    # MASK_PATH=os.path.join(ROOT_DIR,'annotations','%s.png' % MASK_NAME)
+    MASK_PATH='./test.png'
     mask=Image.open(MASK_PATH)
     mask = np.array(mask)
     # P模式索引图像使用单个数字
-    mask = (mask == 8).astype('uint8')*255 #数字代表某一个要素
-
+    # mask = (mask == 8).astype('uint8')*255 #数字代表某一个要素
+    # RGB变布尔
+    height = mask.shape[0]
+    width = mask.shape[1]
+    labels = np.zeros([height, width])
+    for i in range(height):
+        for j in range(width):
+            r = mask[i, j, 0]
+            g = mask[i, j, 1]
+            b = mask[i, j, 2]
+            if mask[i, j, 0] == 255 and mask[i, j, 1] == 255 and mask[i, j, 2] == 255:
+                labels[i, j] = 255
+    mask = labels
     # if(name=='basel_000004_mv0'):
     #     cv2.imshow('dsf',mask)
     #     cv2.waitKey()
@@ -53,7 +64,7 @@ def main():
     obj_ids = np.unique(mask)
     obj_ids = obj_ids[1:]
     masks = (mask == obj_ids[:, None, None]).astype('uint8')   *255
-    masks = Object_Connected_Component(masks,os.path.join(ROOT_DIR,'annotations-object',"%s.png" % MASK_NAME))
+    # masks = Object_Connected_Component(masks,os.path.join(ROOT_DIR,'annotations-object',"%s.png" % MASK_NAME))
     #输出是一个list
     num_objs = len(masks)
     for i in range(num_objs):
@@ -71,18 +82,19 @@ def main():
                 or bounding_box[1] + bounding_box[3] > img_size[0] - 1:
             continue
 
-        contour,hierarchy=cv2.findContours(masks[i],cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        contours,hierarchy=cv2.findContours(masks[i],cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
 
-        epsilon = 0.1 * cv2.arcLength(contour[0], True)
-        approx=cv2.approxPolyDP(contour[0],epsilon,True)
+        for contour in contours:
+            epsilon = 0.1 * cv2.arcLength(contour, True)
+            approx=cv2.approxPolyDP(contour,epsilon,True)
 
 
-        canvas=np.zeros(masks[i].shape)
-        cv2.drawContours(canvas,[approx],-1,255,1)
+            canvas=np.zeros(masks[i].shape)
+            cv2.drawContours(canvas,[approx],-1,255,1)
 
-        cv2.imshow('mask',masks[i])
-        cv2.imshow('contour',canvas)
-        cv2.waitKey()
+            cv2.imshow('mask',masks[i])
+            cv2.imshow('contour',canvas)
+            cv2.waitKey()
 
 
 
