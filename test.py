@@ -60,6 +60,9 @@ def main():
     # if(name=='basel_000004_mv0'):
     #     cv2.imshow('dsf',mask)
     #     cv2.waitKey()
+
+
+    #此处开始*********************************************
     mask = measure.label(mask, connectivity=2)
     obj_ids = np.unique(mask)
     obj_ids = obj_ids[1:]
@@ -70,8 +73,8 @@ def main():
     for i in range(num_objs):
         binary_mask_encoded = mask_util.encode(np.asfortranarray(masks[i].astype(np.uint8)))
 
-        area = mask_util.area(binary_mask_encoded)
-        if area < 1:
+        mask_area = mask_util.area(binary_mask_encoded)
+        if mask_area < 1:
             continue
 
         bounding_box = mask_util.toBbox(binary_mask_encoded)
@@ -82,19 +85,32 @@ def main():
                 or bounding_box[1] + bounding_box[3] > img_size[0] - 1:
             continue
 
-        contours,hierarchy=cv2.findContours(masks[i],cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        contour,hierarchy=cv2.findContours(masks[i],cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        mask_length=cv2.arcLength(contour[0], True)
 
-        for contour in contours:
-            epsilon = 0.1 * cv2.arcLength(contour, True)
-            approx=cv2.approxPolyDP(contour,epsilon,True)
+        cof=1
+        while True:
+            epsilon=cof*mask_length
+            poly=cv2.approxPolyDP(contour[0],epsilon ,True)
+            edge_num=len(poly)
+            if edge_num >= 4: break
+            cof=cof/2
 
 
-            canvas=np.zeros(masks[i].shape)
-            cv2.drawContours(canvas,[approx],-1,255,1)
 
-            cv2.imshow('mask',masks[i])
-            cv2.imshow('contour',canvas)
-            cv2.waitKey()
+        poly_length=cv2.arcLength(poly, True)
+        poly_mask=np.zeros(masks[i].shape)
+        cv2.fillPoly(poly_mask, [poly], 255)
+        poly_encoded=mask_util.encode(np.asfortranarray(poly_mask.astype(np.uint8)))
+        poly_area = mask_util.area(poly_encoded)
+
+        poly_mask_IOU = mask_util.iou([binary_mask_encoded], [poly_encoded],[0])
+
+        #loss=(1-poly_mask_IOU)**2+(mask_area/poly_area-1)**2+(mask_length/poly_length-1)**2
+
+        cv2.imshow('mask',masks[i])
+        cv2.imshow('contour',poly_mask)
+        cv2.waitKey()
 
 
 
