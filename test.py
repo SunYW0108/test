@@ -40,7 +40,7 @@ def main():
     # ROOT_DIR='/home/sun/facades_datasets/3.etrims/'
     # MASK_NAME='basel_000051_mv0'
     # MASK_PATH=os.path.join(ROOT_DIR,'annotations','%s.png' % MASK_NAME)
-    MASK_PATH='./test.png'
+    MASK_PATH='./test4.png'
     mask=Image.open(MASK_PATH)
     mask = np.array(mask)
     # P模式索引图像使用单个数字
@@ -88,6 +88,7 @@ def main():
         contour,hierarchy=cv2.findContours(masks[i],cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
         mask_length=cv2.arcLength(contour[0], True)
 
+        contour[0]=cv2.convexHull(contour[0])
         cof=1
         while True:
             epsilon=cof*mask_length
@@ -96,7 +97,7 @@ def main():
             if edge_num >= 4: break
             cof=cof/2
 
-
+        print (edge_num)
 
         poly_length=cv2.arcLength(poly, True)
         poly_mask=np.zeros(masks[i].shape)
