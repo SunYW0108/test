@@ -40,7 +40,7 @@ def main():
     # ROOT_DIR='/home/sun/facades_datasets/3.etrims/'
     # MASK_NAME='basel_000051_mv0'
     # MASK_PATH=os.path.join(ROOT_DIR,'annotations','%s.png' % MASK_NAME)
-    MASK_PATH='./test4.png'
+    MASK_PATH='./test3.png'
     mask=Image.open(MASK_PATH)
     mask = np.array(mask)
     # P模式索引图像使用单个数字
@@ -89,6 +89,7 @@ def main():
         mask_length=cv2.arcLength(contour[0], True)
 
         contour[0]=cv2.convexHull(contour[0])
+
         cof=1
         while True:
             epsilon=cof*mask_length
