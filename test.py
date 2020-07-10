@@ -40,7 +40,7 @@ def main():
     # ROOT_DIR='/home/sun/facades_datasets/3.etrims/'
     # MASK_NAME='basel_000051_mv0'
     # MASK_PATH=os.path.join(ROOT_DIR,'annotations','%s.png' % MASK_NAME)
-    MASK_PATH='./test3.png'
+    MASK_PATH='./test5.png'
     mask=Image.open(MASK_PATH)
     mask = np.array(mask)
     # P模式索引图像使用单个数字
@@ -56,10 +56,31 @@ def main():
             b = mask[i, j, 2]
             if mask[i, j, 0] == 255 and mask[i, j, 1] == 255 and mask[i, j, 2] == 255:
                 labels[i, j] = 255
-    mask = labels
-    # if(name=='basel_000004_mv0'):
-    #     cv2.imshow('dsf',mask)
-    #     cv2.waitKey()
+    mask = labels.astype('uint8')
+
+    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contour_pt_list = np.concatenate(contours,axis=0)
+    contour = cv2.convexHull(contour_pt_list)
+    contour_length = cv2.arcLength(contour, True)
+    cof = 1
+    while cof > 0:
+        epsilon = cof * contour_length
+        gt_poly = cv2.approxPolyDP(contour, epsilon, True)
+        edge_num = len(gt_poly)
+        if edge_num >= 4: break
+        cof = cof - 0.05
+    # if edge_num < 3: continue
+    mask2 = np.zeros(mask.shape)
+    cv2.fillPoly(mask2, [gt_poly], 255)
+    cv2.imshow('mask', mask)
+    cv2.imshow('contour', mask2)
+    cv2.waitKey()
+
+
+
+
+
+
 
 
     #此处开始*********************************************
