@@ -4,6 +4,7 @@ import numpy as np
 from skimage import measure
 import cv2
 import pycocotools.mask as mask_util
+import math
 
 def is_sameobject(mask1,mask2,object_label):
     x1=np.where(mask1 == 1)[0][0]
@@ -36,11 +37,36 @@ def Object_Connected_Component(masks,filepath):
             masks_new.append(masks[idx])
     return masks_new
 
+def ParallelLinesApprox(contour):
+    slope_list=[]
+    for i in range(contour.shape[0]):
+        pt1=contour[i,0]
+        i2=i+1
+        if i2>contour.shape[0]-1:
+            i2=i2-contour.shape[0]
+        pt2=contour[i2,0]
+        slope=(pt1[1]-pt2[1])/(pt1[0]-pt2[0])
+        slope_list.append(slope)
+        # 5度对应斜率为0.0875
+    thred_slope = math.tan(5.0 / 180.0 * math.pi)
+    for i in range(len(slope_list)):
+        s1=slope_list[i]
+        i2 = i + 2
+        if i2 > len(slope_list) - 1:
+            i2 = i2 - len(slope_list)
+        s2 = slope_list[i2]
+        if s1-s2<thred_slope:
+            #i+1和i2构成中间直线，将其平移至最大端点处
+
+
+
+    return
+
 def main():
     # ROOT_DIR='/home/sun/facades_datasets/3.etrims/'
     # MASK_NAME='basel_000051_mv0'
     # MASK_PATH=os.path.join(ROOT_DIR,'annotations','%s.png' % MASK_NAME)
-    MASK_PATH='./test5.png'
+    MASK_PATH='./test6.png'
     mask=Image.open(MASK_PATH)
     mask = np.array(mask)
     # P模式索引图像使用单个数字
@@ -70,9 +96,15 @@ def main():
         if edge_num >= 4: break
         cof = cof - 0.05
     # if edge_num < 3: continue
+    if edge_num>=4:
+        gt_poly=ParallelLinesApprox(gt_poly)
+
+
+
+
     mask2 = np.zeros(mask.shape)
     cv2.fillPoly(mask2, [gt_poly], 255)
-    cv2.imshow('mask', mask)
+    cv2.imshow('raw', mask)
     cv2.imshow('contour', mask2)
     cv2.waitKey()
 
